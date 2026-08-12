@@ -1,5 +1,6 @@
 import { StudentModel } from '../models/student.model';
 
+// Response object returned by the controller to API clients.
 export class StudentEntity {
   id!: string;
   name!: string;
@@ -11,4 +12,3 @@ export class StudentEntity {
     Object.assign(this, model);
   }
 }
-
