@@ -3,107 +3,84 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+
 import { CreateStudentDto } from './dto/create-student.dto';
+import { StudentResponseDto } from './dto/student-response.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { StudentEntity } from './entities/student.entity';
-import { StudentModel } from './models/student.model';
-
-type PrismaStudentRecord = {
-  id: string;
-  name: string;
-  age: number;
-  email: string;
-  createdAt: Date;
-};
+import { StudentsRepository } from './students.repository';
 
 @Injectable()
 export class StudentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly studentsRepository: StudentsRepository) {}
 
-  async create(dto: CreateStudentDto): Promise<StudentEntity> {
-    const existingStudent = await this.prisma.student.findUnique({
-      where: { email: dto.email },
-      select: { id: true },
-    });
+  async create(dto: CreateStudentDto): Promise<StudentResponseDto> {
+    const existingStudent = await this.studentsRepository.findByEmail(dto.email);
 
     if (existingStudent) {
       throw new ConflictException('Student with this email already exists');
     }
 
-    const student = await this.prisma.student.create({
-      data: {
+    const student = await this.studentsRepository.create(
+      new StudentEntity({
         name: dto.name,
         age: dto.age,
         email: dto.email,
-      },
-    });
+      }),
+    );
 
-    return this.toEntity(student);
+    return this.toResponseDto(student);
   }
 
-  async findAll(): Promise<StudentEntity[]> {
-    const students: PrismaStudentRecord[] = await this.prisma.student.findMany({
-      orderBy: { name: 'asc' },
-    });
-    return students.map((student) => this.toEntity(student));
+  async findAll(): Promise<StudentResponseDto[]> {
+    const students = await this.studentsRepository.findAll();
+    return students.map((student) => this.toResponseDto(student));
   }
 
-  async findOne(id: string): Promise<StudentEntity> {
+  async findOne(id: string): Promise<StudentResponseDto> {
     const student = await this.getStudentOrThrow(id);
-    return this.toEntity(student);
+    return this.toResponseDto(student);
   }
 
-  async update(id: string, dto: UpdateStudentDto): Promise<StudentEntity> {
+  async update(id: string, dto: UpdateStudentDto): Promise<StudentResponseDto> {
     const student = await this.getStudentOrThrow(id);
     if (dto.email && dto.email !== student.email) {
-      const existingStudent = await this.prisma.student.findUnique({
-        where: { email: dto.email },
-        select: { id: true },
-      });
+      const existingStudent = await this.studentsRepository.findByEmail(dto.email);
       if (existingStudent) {
         throw new ConflictException('Student with this email already exists');
       }
     }
 
-    const updatedStudent = await this.prisma.student.update({
-      where: { id },
-      data: {
-        name: dto.name,
-        age: dto.age,
-        email: dto.email,
-      },
-    });
-
-    return this.toEntity(updatedStudent);
+    const updatedStudent = await this.studentsRepository.update(
+      new StudentEntity({
+        id: student.id,
+        name: dto.name ?? student.name,
+        age: dto.age ?? student.age,
+        email: dto.email ?? student.email,
+        createdAt: student.createdAt,
+      }),
+    );
+    return this.toResponseDto(updatedStudent);
   }
 
-  async remove(id: string): Promise<StudentEntity> {
+  async remove(id: string): Promise<StudentResponseDto> {
     await this.getStudentOrThrow(id);
-
-    const deletedStudent = await this.prisma.student.delete({
-      where: { id },
-    });
-
-    return this.toEntity(deletedStudent);
+    const deletedStudent = await this.studentsRepository.remove(id);
+    return this.toResponseDto(deletedStudent);
   }
 
-  private toEntity(student: PrismaStudentRecord): StudentEntity {
-    const model: StudentModel = {
+  private toResponseDto(student: StudentEntity): StudentResponseDto {
+    return {
       id: student.id,
       name: student.name,
       age: student.age,
       email: student.email,
       createdAt: student.createdAt,
     };
-
-    return new StudentEntity(model);
   }
 
-  private async getStudentOrThrow(id: string): Promise<PrismaStudentRecord> {
-    const student = await this.prisma.student.findUnique({
-      where: { id },
-    });
+  private async getStudentOrThrow(id: string): Promise<StudentEntity> {
+    const student = await this.studentsRepository.findById(id);
 
     if (!student) {
       throw new NotFoundException(`Student with id ${id} was not found`);
