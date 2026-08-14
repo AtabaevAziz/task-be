@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,11 +9,17 @@ import { CreateStudentDto } from './dto/create-student.dto';
 import { StudentResponseDto } from './dto/student-response.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { StudentEntity } from './entities/student.entity';
-import { StudentsRepository } from './students.repository';
+import {
+  StudentsRepository,
+  StudentsRepositoryContract,
+} from './students.repository';
 
 @Injectable()
 export class StudentsService {
-  constructor(private readonly studentsRepository: StudentsRepository) {}
+  constructor(
+    @Inject(StudentsRepository)
+    private readonly studentsRepository: StudentsRepositoryContract,
+  ) {}
 
   async create(dto: CreateStudentDto): Promise<StudentResponseDto> {
     const existingStudent = await this.studentsRepository.findByEmail(dto.email);

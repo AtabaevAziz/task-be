@@ -4,12 +4,12 @@ import { CreateStudentDto } from './dto/create-student.dto';
 import { StudentResponseDto } from './dto/student-response.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { StudentEntity } from './entities/student.entity';
-import { StudentsRepository } from './students.repository';
+import { StudentsRepositoryContract } from './students.repository';
 import { StudentsService } from './students.service';
 
 describe('StudentsService', () => {
   let service: StudentsService;
-  let repository: jest.Mocked<StudentsRepository>;
+  let repository: jest.Mocked<StudentsRepositoryContract>;
 
   const createdAt = new Date('2026-08-12T10:00:00.000Z');
   const baseStudent = new StudentEntity({
@@ -35,7 +35,7 @@ describe('StudentsService', () => {
       create: jest.fn(),
       update: jest.fn(),
       remove: jest.fn(),
-    } as unknown as jest.Mocked<StudentsRepository>;
+    } as jest.Mocked<StudentsRepositoryContract>;
 
     service = new StudentsService(repository);
   });

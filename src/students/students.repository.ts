@@ -11,8 +11,17 @@ type PrismaStudentRecord = {
   createdAt: Date;
 };
 
+export interface StudentsRepositoryContract {
+  findById(id: string): Promise<StudentEntity | null>;
+  findByEmail(email: string): Promise<StudentEntity | null>;
+  findAll(): Promise<StudentEntity[]>;
+  create(entity: StudentEntity): Promise<StudentEntity>;
+  update(entity: StudentEntity): Promise<StudentEntity>;
+  remove(id: string): Promise<StudentEntity>;
+}
+
 @Injectable()
-export class StudentsRepository {
+export class StudentsRepository implements StudentsRepositoryContract {
   constructor(private readonly prisma: PrismaService) {}
 
   async findById(id: string): Promise<StudentEntity | null> {
