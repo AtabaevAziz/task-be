@@ -11,6 +11,7 @@ export class StudentsController {
 
   @Post()
   create(@Body() dto: CreateStudentDto): Promise<StudentResponseDto> {
+    // The controller accepts the validated request DTO and forwards it to the service layer.
     return this.studentsService.create(dto);
   }
 

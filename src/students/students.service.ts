@@ -22,12 +22,14 @@ export class StudentsService {
   ) {}
 
   async create(dto: CreateStudentDto): Promise<StudentResponseDto> {
+    // Business logic checks whether the request can create a new student before touching the database.
     const existingStudent = await this.studentsRepository.findByEmail(dto.email);
 
     if (existingStudent) {
       throw new ConflictException('Student with this email already exists');
     }
 
+    // The service converts the incoming DTO into a domain entity for persistence.
     const student = await this.studentsRepository.create(
       new StudentEntity({
         name: dto.name,
@@ -77,6 +79,7 @@ export class StudentsService {
   }
 
   private toResponseDto(student: StudentEntity): StudentResponseDto {
+    // The service maps the domain entity back into the API response contract.
     return {
       id: student.id,
       name: student.name,

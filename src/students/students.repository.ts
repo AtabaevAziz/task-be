@@ -49,6 +49,7 @@ export class StudentsRepository implements StudentsRepositoryContract {
   }
 
   async create(entity: StudentEntity): Promise<StudentEntity> {
+    // The repository translates the domain entity into Prisma data and persists it in the database.
     const student = await this.prisma.student.create({
       data: {
         name: entity.name,
@@ -82,6 +83,7 @@ export class StudentsRepository implements StudentsRepositoryContract {
   }
 
   private toEntity(student: PrismaStudentRecord): StudentEntity {
+    // Database records are converted back into entities before returning to the service layer.
     return new StudentEntity({
       id: student.id,
       name: student.name,
